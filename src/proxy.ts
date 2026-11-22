@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAuthorized } from "@/lib/studio-auth";
 
 /**
  * Local-tool CORS for /api/*.
@@ -39,6 +40,14 @@ function corsHeaders(origin: string, req: NextRequest): Record<string, string> {
 }
 
 export function proxy(req: NextRequest) {
+  // Hosted deployments: site-wide Basic auth when STUDIO_PASSWORD is set (health check stays open)
+  if (req.nextUrl.pathname !== "/api/health" && !isAuthorized(req.headers.get("authorization"))) {
+    return new NextResponse("Authentication required", {
+      status: 401,
+      headers: { "WWW-Authenticate": 'Basic realm="UGC Ad Studio", charset="UTF-8"' },
+    });
+  }
+  if (!req.nextUrl.pathname.startsWith("/api/")) return NextResponse.next();
   const origin = allowedOrigin(req.headers.get("origin"));
   // answer preflights here — API routes have no OPTIONS handlers
   if (req.method === "OPTIONS" && origin) {
@@ -51,4 +60,5 @@ export function proxy(req: NextRequest) {
   return res;
 }
 
-export const config = { matcher: "/api/:path*" };
+// Everything except Next's build assets (those carry no user data).
+export const config = { matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png).*)"] };

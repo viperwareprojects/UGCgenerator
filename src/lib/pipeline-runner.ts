@@ -19,6 +19,7 @@
  * one implementation.
  */
 
+import { internalAuthHeaders } from "@/lib/studio-auth";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { compositions, pipelineRuns } from "@/lib/db/schema";
@@ -72,7 +73,7 @@ async function runJudgeStage(input: StartPipelineInput): Promise<void> {
   try {
     const res = await fetch(`${input.origin}/api/project/${input.projectId}/script-judge`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...internalAuthHeaders() },
       body: JSON.stringify({ scriptId: input.scriptId, llmConfig: input.llmConfig }),
     });
     if (!res.ok) return;
@@ -85,7 +86,7 @@ async function runJudgeStage(input: StartPipelineInput): Promise<void> {
     if (patchByShot.size === 0) return;
     await fetch(`${input.origin}/api/project/${input.projectId}/scripts`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...internalAuthHeaders() },
       body: JSON.stringify({ scriptId: input.scriptId, shotTexts: Array.from(patchByShot.values()) }),
     });
   } catch {
@@ -98,7 +99,7 @@ async function runStockFillStage(input: StartPipelineInput): Promise<void> {
   try {
     await fetch(`${input.origin}/api/project/${input.projectId}/stock-fill`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...internalAuthHeaders() },
       body: JSON.stringify({
         scriptId: input.scriptId,
         source: "all",
@@ -115,7 +116,7 @@ async function runStockFillStage(input: StartPipelineInput): Promise<void> {
 async function runComposeStage(input: StartPipelineInput, runId: string): Promise<void> {
   const res = await fetch(`${input.origin}/api/project/${input.projectId}/compose`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...internalAuthHeaders() },
     body: JSON.stringify({ scriptId: input.scriptId, freeTts: { enabled: true } }),
   });
   const data = (await res.json().catch(() => ({}))) as { compositionId?: string; error?: string };
@@ -155,7 +156,7 @@ export async function startPipelineRun(input: StartPipelineInput): Promise<strin
       if (input.scriptId) {
         await fetch(`${input.origin}/api/project/${input.projectId}/scripts`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...internalAuthHeaders() },
           body: JSON.stringify({ selectedScriptId: input.scriptId }),
         }).catch(() => {});
       }

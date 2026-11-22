@@ -49,7 +49,6 @@ COPY --from=builder /app/drizzle ./drizzle
 # 数据（sqlite + uploads + output）落可写卷，便于持久化
 ENV APP_DATA_DIR=/data
 RUN mkdir -p /data
-VOLUME /data
 ENV PORT=3000 HOSTNAME=0.0.0.0
 EXPOSE 3000
 CMD ["node", "server.js"]
