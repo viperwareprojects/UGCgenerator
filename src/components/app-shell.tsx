@@ -32,6 +32,7 @@ const NAV_SECTIONS: { labelKey: string; items: NavItem[] }[] = [
     labelKey: "navSectionCreate",
     items: [
       { key: "navHome", href: "/start", icon: "home" },
+      { key: "navUgcStudio", href: "/ugc", icon: "film" },
       { key: "navNew", href: "/project/new", icon: "plus", proOnly: true },
       { key: "navClone", href: "/project/clone", icon: "film" },
       { key: "navMediaLab", href: "/media-lab", icon: "scan", proOnly: true },
@@ -162,6 +163,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {!collapsed && t(item.key)}
     </Link>
   );
+
+  // The UGC Ad Studio (/ugc) is a standalone, chrome-free portal with its own header.
+  if (pathname?.startsWith("/ugc")) return <>{children}</>;
 
   return (
     <div className="flex min-h-screen">

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
-// Home page redirects directly to the new "create-first" landing page at /start.
-// Capabilities of the old home (project list + entry cards) have been merged into /start: upload/one-liner dual entry, resume recent projects, product library/batch/settings entry.
+// Home page goes straight to the UGC Ad Studio — the simplified portal for making ad videos.
+// The original ClipForge workspace is still available at /start ("Advanced editor").
 export default function HomePage() {
-  redirect("/start");
+  redirect("/ugc");
 }
