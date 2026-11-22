@@ -104,6 +104,7 @@ export default function UgcStudioPage() {
   const { characters, addCharacter, updateCharacter } = useCharacterStore();
 
   const [view, setView] = useState<View>("create");
+  const [theme, setTheme] = useTheme();
   const [showSetup, setShowSetup] = useState(false);
 
   // ---------- wizard state ----------
@@ -491,26 +492,34 @@ export default function UgcStudioPage() {
     }
   };
 
-  if (!mounted) return <div className="ugc ugc-loading" />;
+  if (!mounted) return <div className="ugc ugc-loading" data-theme={theme} />;
 
   const canGoScript = step >= 2 && scripts.length > 0;
   const canGoVideo = step >= 3 || !!result;
 
   return (
-    <div className="ugc">
+    <div className="ugc" data-theme={theme}>
       <header className="ugc-top">
-        <button className="ugc-brand" onClick={() => setView("create")}>
-          <span className="ugc-logo" aria-hidden>▶</span>
-          <span>UGC Ad Studio</span>
-        </button>
-        <nav className="ugc-nav">
-          <button className={view === "create" ? "on" : ""} onClick={() => setView("create")}>Create ad</button>
-          <button className={view === "library" ? "on" : ""} onClick={() => setView("library")}>My ads</button>
-          <button onClick={() => setShowSetup(true)}>
-            <span className={`ugc-dot ${llmReady ? (aiReady ? "ok" : "half") : "off"}`} />Settings
+        <div className="ugc-top-in">
+          <button className="ugc-brand" onClick={() => setView("create")} aria-label="UGC Ad Studio home">
+            <BrandMark />
+            <span>UGC Ad Studio</span>
           </button>
-          <Link href="/start" className="ugc-adv" title="Open the full ClipForge editor">Advanced ↗</Link>
-        </nav>
+          <nav className="ugc-nav">
+            <button className={view === "create" ? "on" : ""} onClick={() => setView("create")}>Create ad</button>
+            <button className={view === "library" ? "on" : ""} onClick={() => setView("library")}>My ads</button>
+            <button onClick={() => setShowSetup(true)}>
+              <span className={`ugc-dot ${llmReady ? (aiReady ? "ok" : "half") : "off"}`} />Settings
+            </button>
+            <Link href="/start" className="ugc-adv" title="Open the full ClipForge editor">Advanced</Link>
+          </nav>
+          <div className="ugc-top-right">
+            <button className="ugc-theme" aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+              {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+            </button>
+            <button className="ugc-btn primary sm" onClick={resetWizard}>New ad <Arrow /></button>
+          </div>
+        </div>
       </header>
 
       {view === "library" ? (
@@ -546,6 +555,7 @@ export default function UgcStudioPage() {
 
           {step === 0 && (
             <section className="ugc-card">
+              <p className="ugc-eyebrow">Step 1 of 4 · Product</p>
               <h1>What are we selling?</h1>
               <p className="ugc-sub">Paste a product page — we&apos;ll pull the name, details and photos. Or upload photos yourself.</p>
 
@@ -603,13 +613,14 @@ export default function UgcStudioPage() {
 
               <div className="ugc-actions">
                 <span />
-                <button className="ugc-btn primary" disabled={!productValid && !projectId} onClick={() => setStep(1)}>Next: creative →</button>
+                <button className="ugc-btn primary" disabled={!productValid && !projectId} onClick={() => setStep(1)}>Next: creative <Arrow /></button>
               </div>
             </section>
           )}
 
           {step === 1 && (
             <section className="ugc-card">
+              <p className="ugc-eyebrow">Step 2 of 4 · Creative</p>
               <h1>Pick the creative</h1>
               <p className="ugc-sub">Choose an ad angle and who&apos;s on camera. You&apos;ll review the script before anything renders.</p>
 
@@ -633,7 +644,7 @@ export default function UgcStudioPage() {
                         {characters.find((x) => x.id === c.id)?.referenceImages?.[0] ? (
                           <img className="av" src={characters.find((x) => x.id === c.id)!.referenceImages[0]} alt="" />
                         ) : (
-                          <span className="av" style={{ background: `linear-gradient(135deg, hsl(${c.hue} 70% 62%), hsl(${(c.hue + 40) % 360} 65% 45%))` }}>{c.name[0]}</span>
+                          <span className="av">{c.name[0]}</span>
                         )}
                         <strong>{c.name}</strong>
                         <span>{c.tagline}</span>
@@ -678,7 +689,7 @@ export default function UgcStudioPage() {
               <div className="ugc-actions">
                 <button className="ugc-btn ghost" onClick={() => setStep(0)}>← Back</button>
                 <button className="ugc-btn primary" disabled={!!busy} onClick={writeScripts}>
-                  {busy ? <><Spinner />{busy}</> : scripts.length ? "Rewrite scripts →" : "Write my scripts →"}
+                  {busy ? <><Spinner />{busy}</> : scripts.length ? <>Rewrite scripts <Arrow /></> : <>Write my scripts <Arrow /></>}
                 </button>
               </div>
               {scripts.length > 0 && !busy && (
@@ -689,6 +700,7 @@ export default function UgcStudioPage() {
 
           {step === 2 && (
             <section className="ugc-card">
+              <p className="ugc-eyebrow">Step 3 of 4 · Script</p>
               <h1>Choose a script</h1>
               <p className="ugc-sub">Three angles on <strong>{productTitle}</strong>. Click any line to rewrite it in your own words.</p>
 
@@ -727,7 +739,7 @@ export default function UgcStudioPage() {
 
               <div className="ugc-actions">
                 <button className="ugc-btn ghost" onClick={() => setStep(1)}>← Change creative</button>
-                <button className="ugc-btn primary" disabled={!currentScript} onClick={() => { setTasks([]); setPreview(null); setResult(null); setStep(3); }}>Use this script →</button>
+                <button className="ugc-btn primary" disabled={!currentScript} onClick={() => { setTasks([]); setPreview(null); setResult(null); setStep(3); }}>Use this script <Arrow /></button>
               </div>
             </section>
           )}
@@ -740,7 +752,8 @@ export default function UgcStudioPage() {
                     <video src={result.url} controls playsInline autoPlay />
                   </div>
                   <div className="ugc-result-side">
-                    <h1>Your ad is ready 🎉</h1>
+                    <p className="ugc-eyebrow">Done</p>
+                    <h1>Your ad is ready</h1>
                     <p className="ugc-sub">{productTitle}{currentScript?.title ? ` — ${currentScript.title}` : ""}</p>
                     <a className="ugc-btn primary" href={result.url} download>⬇ Download MP4</a>
                     <button className="ugc-btn" onClick={() => { setResult(null); setTasks([]); setStep(2); }}>Try another script</button>
@@ -751,6 +764,7 @@ export default function UgcStudioPage() {
                 </div>
               ) : (
                 <>
+                  <p className="ugc-eyebrow">Step 4 of 4 · Video</p>
                   <h1>{creative.mode === "free" ? "Make the quick draft" : "Make the AI video"}</h1>
                   <p className="ugc-sub">
                     {creative.mode === "free"
@@ -845,6 +859,59 @@ export default function UgcStudioPage() {
 }
 
 // ======================================================================
+const THEME_KEY = "ugc-theme";
+type Theme = "light" | "dark";
+
+/** Light/dark preference: saved per browser, defaults to the system setting. */
+function useTheme(): [Theme, (t: Theme) => void] {
+  const [theme, setThemeState] = useState<Theme>("light");
+  useEffect(() => {
+    let saved: string | null = null;
+    try { saved = localStorage.getItem(THEME_KEY); } catch { /* storage unavailable */ }
+    const initial: Theme = saved === "dark" || saved === "light" ? saved : window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    queueMicrotask(() => setThemeState(initial));
+  }, []);
+  const setTheme = (t: Theme) => {
+    setThemeState(t);
+    try { localStorage.setItem(THEME_KEY, t); } catch { /* ignore */ }
+  };
+  return [theme, setTheme];
+}
+
+function BrandMark() {
+  return (
+    <svg className="ugc-mark" width="28" height="28" viewBox="0 0 180 180" aria-hidden="true" focusable="false">
+      <rect width="180" height="180" rx="44" fill="currentColor" />
+      <path d="M58 40c0-10.6 11.5-17.3 20.7-12.1l76 46c8.9 5.4 8.9 18.8 0 24.2l-76 46C69.5 149.3 58 142.6 58 132V40Z" fill="var(--on-accent)" />
+    </svg>
+  );
+}
+
+function Arrow() {
+  return (
+    <svg className="ugc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
+    </svg>
+  );
+}
+
+function SunIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+    </svg>
+  );
+}
+
 function Spinner() {
   return <span className="ugc-spin" aria-hidden />;
 }
@@ -899,8 +966,11 @@ function Library({ onOpen, onNew }: { onOpen: (p: ProjectRow, c: Composition | n
   return (
     <main className="ugc-main wide">
       <div className="ugc-libhead">
-        <h1>My ads</h1>
-        <button className="ugc-btn primary" onClick={onNew}>＋ New ad</button>
+        <div>
+          <p className="ugc-eyebrow">Library</p>
+          <h1>My ads</h1>
+        </div>
+        <button className="ugc-btn primary" onClick={onNew}>New ad <Arrow /></button>
       </div>
       {err && <div className="ugc-error">{err}</div>}
       {!rows && !err && <p className="ugc-sub"><Spinner /> Loading…</p>}
